@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="MBA Timetable Dashboard", page_icon="🎓", layout="wide")
@@ -10,10 +11,20 @@ st.markdown("Zero-Conflict Schedule generated via CP-SAT Optimization & Machine 
 @st.cache_data
 def load_data():
     try:
-        # Load the timetable
+        # Load the timetable & enrolment
         timetable = pd.read_csv('final_strict_timetable.csv')
-        # Load the student enrolment
         enrolment = pd.read_csv('godmode_3way_master_enrolment.csv')
+        
+        # Look for the optional student details file to add Names and Emails
+        if os.path.exists('student_details.csv'):
+            details = pd.read_csv('student_details.csv')
+            # Automatically merge the names and emails based on StudentID
+            enrolment = pd.merge(enrolment, details, on='StudentID', how='left')
+        else:
+            # Create empty columns if the file isn't available yet
+            enrolment['Name'] = "Data Not Uploaded"
+            enrolment['Email'] = "Data Not Uploaded"
+            
         return timetable, enrolment
     except FileNotFoundError:
         st.error("⚠️ Make sure 'final_strict_timetable.csv' and 'godmode_3way_master_enrolment.csv' are in the same folder as this script!")
@@ -94,9 +105,9 @@ if not timetable.empty and not enrolment.empty:
         
         st.metric(f"Total Students in {selected_enrol_section}", len(students_in_section))
         
-        # Display student IDs
+        # Display student IDs, Names, and Emails
         st.dataframe(
-            students_in_section[['StudentID']], 
+            students_in_section[['StudentID', 'Name', 'Email']], 
             use_container_width=True,
             hide_index=True
         )
