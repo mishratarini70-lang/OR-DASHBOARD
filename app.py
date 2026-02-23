@@ -12,13 +12,14 @@ st.markdown("Zero-Conflict Schedule generated via CP-SAT Optimization & Machine 
 @st.cache_data(show_spinner=False)
 def load_data():
     try:
+        # Load core CSVs
         timetable = pd.read_csv('final_strict_timetable.csv')
         enrolment = pd.read_csv('godmode_3way_master_enrolment.csv')
         
-        # Clean hidden spaces
+        # Strip hidden spaces to prevent merging errors
         enrolment['StudentID'] = enrolment['StudentID'].astype(str).str.strip()
         
-        # Extract Names and Emails
+        # Hunt for WAI data to extract real names
         wai_files = glob.glob("WAI_Data*.csv")
         all_students = []
         
@@ -30,7 +31,7 @@ def load_data():
                     
                     header_row = 0
                     for i, line in enumerate(lines):
-                        if 'Student ID' in line or 'StudentID' in line:
+                        if 'Student ID' in line or 'StudentID' in line or 'Serial No.' in line:
                             header_row = i
                             break
                             
@@ -50,7 +51,7 @@ def load_data():
                 except Exception:
                     continue
                     
-        # Merge the Names and Emails
+        # Merge the names and emails safely
         if all_students:
             student_details = pd.concat(all_students)
             student_details = student_details[student_details['StudentID'] != 'nan']
@@ -75,12 +76,12 @@ if not timetable.empty and not enrolment.empty:
     
     st.sidebar.header("🔍 Dashboard Filters")
     
-    # --- TABS (NOW WITH CALENDAR) ---
+    # --- TABS ---
     tab1, tab2, tab3, tab4 = st.tabs([
-        "📅 Daily Master Schedule", 
-        "👨‍🏫 Faculty/Course View", 
+        "📅 Daily Master", 
+        "👨‍🏫 Faculty View", 
         "👥 Student Directory",
-        "🗓️ Weekly Calendar View"
+        "🗓️ Weekly Calendar"
     ])
     
     # ==========================================
@@ -126,54 +127,51 @@ if not timetable.empty and not enrolment.empty:
         st.dataframe(students_in_section[['StudentID', 'Name', 'Email']], use_container_width=True, hide_index=True)
 
     # ==========================================
-    # TAB 4: WEEKLY CALENDAR VIEW
+    # TAB 4: THE WEEKLY CALENDAR GRID
     # ==========================================
     with tab4:
         st.subheader("🗓️ Visual Weekly Calendar")
-        st.write("View the schedule in a traditional calendar grid format.")
+        st.write("View the master schedule mapped out in a clean weekly grid.")
         
-        # Filters for the calendar
         col1, col2 = st.columns(2)
         weeks = sorted(timetable['Week'].unique())
         selected_week = col1.selectbox("Select Week:", weeks)
-        
         view_mode = col2.radio("View Calendar By:", ["Room", "Course Section"], horizontal=True)
         
-        # Filter down to the selected week
         week_data = timetable[timetable['Week'] == selected_week].copy()
         
         if view_mode == "Room":
             rooms = sorted(week_data['Room_Number'].unique())
             selected_target = st.selectbox("Select Room to view:", rooms)
             cal_data = week_data[week_data['Room_Number'] == selected_target]
-            values_col = 'Course_Section' # Show courses in the grid
+            values_col = 'Course_Section' 
         else:
             course_secs = sorted(week_data['Course_Section'].unique())
             selected_target = st.selectbox("Select Section to view:", course_secs)
             cal_data = week_data[week_data['Course_Section'] == selected_target]
-            values_col = 'Room_Number' # Show rooms in the grid
+            values_col = 'Room_Number' 
             
         if cal_data.empty:
             st.info("No classes scheduled for this selection during the chosen week.")
         else:
-            # Create the pivot table to act as a Calendar Grid
+            # Standard sorting logic to make the calendar look perfect
             days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
             
-            # Pivot: Rows = Time Slots, Columns = Days, Cells = The Target Value
+            # Create the Calendar Pivot
             calendar_pivot = cal_data.pivot_table(
                 index='Time_Slot', 
                 columns='Day', 
                 values=values_col, 
-                aggfunc=lambda x: ', '.join(x) # In case of multiple (shouldn't happen with our strict rules, but good practice)
+                aggfunc=lambda x: ' + '.join(x) 
             )
             
-            # Reorder columns to standard week order, keeping only days that exist in the pivot
+            # Reorder columns chronologically
             available_days = [day for day in days_order if day in calendar_pivot.columns]
             calendar_pivot = calendar_pivot.reindex(columns=available_days)
             
-            # Display the beautifully formatted calendar grid
+            # Fill empty slots with a clean dash and render
             st.dataframe(
-                calendar_pivot.fillna("—"), # Replace empty cells with dashes
+                calendar_pivot.fillna("—"), 
                 use_container_width=True
             )
 
