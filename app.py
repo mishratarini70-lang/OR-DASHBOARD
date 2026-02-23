@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
-# 🚨 Notice: Plotly is completely gone! No more import errors.
+
+st.title("🚨 Server Check")
+st.success("If you can see this, GitHub is syncing properly!")
 
 # --- Configuration ---
 st.set_page_config(page_title="MBA Timetable: God Mode", layout="wide")
