@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
-
-st.title("🚨 Server Check")
-st.success("If you can see this, GitHub is syncing properly!")
+import plotly.express as px
 
 # --- Configuration ---
 st.set_page_config(page_title="MBA Timetable: God Mode", layout="wide")
@@ -20,7 +18,7 @@ def load_data():
         return tt, cm, en
     except Exception as e:
         st.error(f"⚠️ Error loading files: {e}")
-        st.info("Ensure the CSV files are in exactly the same GitHub folder as this app.py file.")
+        st.info("Ensure the CSV files are in the exact same GitHub folder as app.py.")
         return None, None, None
 
 df_tt, df_cm, df_en = load_data()
@@ -46,11 +44,10 @@ if df_tt is not None:
         st.subheader("2-Way Conflict Matrix")
         st.write("Visualizing overlaps: The model ensures darker red cells are never scheduled simultaneously.")
         
-        # 💡 THE GENIUS WORKAROUND: Using Pandas built-in styling instead of Plotly
+        # Replace 9999 (self-conflict) with 0 for better heatmap scale
         viz_cm = df_cm.replace(9999, 0)
-        styled_cm = viz_cm.style.background_gradient(cmap='Reds', axis=None)
-        
-        st.dataframe(styled_cm, use_container_width=True)
+        fig = px.imshow(viz_cm, color_continuous_scale='Reds', aspect="auto")
+        st.plotly_chart(fig, use_container_width=True)
 
     with tab3:
         st.subheader("Individual Schedule Search")
