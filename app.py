@@ -1,5 +1,16 @@
 """
-IIM Ranchi MBA Timetable – God Mode OR Dashboard v3
+IIM Ranchi MBA Timetable – God Mode OR Dashboard v3.0
+
+This dashboard serves as the front-end visualization layer for the God Mode 2-Way 
+Timetable Optimization project. It seamlessly integrates a premium, user-friendly 
+interface with a heavy-duty Operations Research (OR) backend. 
+
+Key Operational Capabilities:
+- Bypasses legacy Excel heuristics to directly parse God Mode CSV outputs.
+- Validates 100% attendance feasibility via strict Constraint Satisfaction Programming (0 overlaps).
+- Renders interactive Plotly heatmaps based on the granular 2-Way Conflict Matrix.
+- Simulates a dynamic Student Portal for personalized, clash-free schedule retrieval.
+- Evaluates infrastructure utilization and balances classroom loads across the academic term.
 """
 
 import streamlit as st
