@@ -1,6 +1,5 @@
 """
 IIM Ranchi MBA Timetable – God Mode OR Dashboard v3
-Adapted friend's premium UI to run directly on the God Mode 2-Way CSV outputs.
 """
 
 import streamlit as st
